@@ -1,0 +1,828 @@
+openapi: 3.0.3
+info:
+  title: Backlog Management System (BMS) API
+  version: 1.0.0
+  description: API for managing maintenance backlogs, units, work orders, notifications, and user authorization.
+servers:
+  - url: /api/v1
+    description: Local Development Server
+
+paths:
+  /auth/login:
+    post:
+      summary: Authenticate user
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Successful authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid NRP or password
+
+  /auth/me:
+    get:
+      summary: Get current authenticated user details
+      tags:
+        - Authentication
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /users:
+    get:
+      summary: List users
+      tags:
+        - User Management
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: List of users with pagination
+    post:
+      summary: Create new user (Admin Only)
+      tags:
+        - User Management
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /users/{id}:
+    get:
+      summary: Get user details by ID
+      tags:
+        - User Management
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User detail
+    put:
+      summary: Update user (Admin Only)
+      tags:
+        - User Management
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: User updated
+    delete:
+      summary: Soft-delete user (Admin Only)
+      tags:
+        - User Management
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User deleted
+
+  /units:
+    get:
+      summary: List units
+      tags:
+        - Unit Management
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: List of units
+    post:
+      summary: Create unit (Admin Only)
+      tags:
+        - Unit Management
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUnitRequest'
+      responses:
+        '201':
+          description: Unit created
+
+  /units/{id}:
+    get:
+      summary: Get unit detail
+      tags:
+        - Unit Management
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Unit detail
+    put:
+      summary: Update unit (Admin Only)
+      tags:
+        - Unit Management
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUnitRequest'
+      responses:
+        '200':
+          description: Unit updated
+    delete:
+      summary: Soft-delete unit (Admin Only)
+      tags:
+        - Unit Management
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Unit deleted
+
+  /backlogs:
+    get:
+      summary: List backlogs (Scoped by role & site/section permissions)
+      tags:
+        - Backlog Management
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Scoped list of backlogs
+    post:
+      summary: Create backlog (Mekanik Only)
+      tags:
+        - Backlog Management
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBacklogRequest'
+      responses:
+        '201':
+          description: Backlog created
+
+  /backlogs/{id}:
+    get:
+      summary: Get backlog details by ID
+      tags:
+        - Backlog Management
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Backlog details
+
+  /backlogs/{id}/approve:
+    post:
+      summary: Approve backlog (GL Only)
+      tags:
+        - Backlog Lifecyle
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Backlog status set to APPROVED
+
+  /backlogs/{id}/reject:
+    post:
+      summary: Reject backlog (GL Only)
+      tags:
+        - Backlog Lifecyle
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Backlog status set to REJECTED
+
+  /backlogs/{id}/installation:
+    post:
+      summary: Start installation of parts for backlog (Mekanik Only)
+      tags:
+        - Backlog Lifecyle
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Backlog status transitioned to INSTALLATION
+
+  /backlogs/{id}/complete:
+    post:
+      summary: Complete backlog and submit installation details (Mekanik Only)
+      tags:
+        - Backlog Lifecyle
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompleteBacklogRequest'
+      responses:
+        '200':
+          description: Backlog status transitioned to COMPLETED
+
+  /backlogs/{id}/parts:
+    get:
+      summary: Get backlog parts list
+      tags:
+        - Backlog Sub-Entities
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of parts
+    post:
+      summary: Add part to backlog (Mekanik Only)
+      tags:
+        - Backlog Sub-Entities
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddPartRequest'
+      responses:
+        '201':
+          description: Part added
+
+  /backlogs/{id}/photos:
+    get:
+      summary: Get backlog photos list
+      tags:
+        - Backlog Sub-Entities
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of photos
+    post:
+      summary: Add photo to backlog (Mekanik Only)
+      tags:
+        - Backlog Sub-Entities
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddPhotoRequest'
+      responses:
+        '201':
+          description: Photo added
+
+  /backlogs/{id}/history:
+    get:
+      summary: Get backlog status history
+      tags:
+        - Backlog Sub-Entities
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of history logs
+
+  /backlogs/{id}/completion:
+    get:
+      summary: Get backlog completion remarks/details
+      tags:
+        - Backlog Sub-Entities
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Completion details
+
+  /work-orders:
+    get:
+      summary: List all work orders
+      tags:
+        - Work Orders
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: List of work orders
+    post:
+      summary: Create new Work Order for an approved backlog (Planner Only)
+      tags:
+        - Work Orders
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWorkOrderRequest'
+      responses:
+        '201':
+          description: Work Order created
+
+  /work-orders/{id}:
+    get:
+      summary: Get work order detail
+      tags:
+        - Work Orders
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Work order details
+
+  /work-orders/{id}/ordering:
+    put:
+      summary: Update ordering progress percentage (Planner Only)
+      tags:
+        - Work Orders
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - orderingProgress
+              properties:
+                orderingProgress:
+                  type: integer
+                  minimum: 0
+                  maximum: 100
+      responses:
+        '200':
+          description: Ordering progress updated successfully
+
+  /work-orders/{id}/full-supply:
+    post:
+      summary: Mark work order parts as fully supplied (Planner Only)
+      tags:
+        - Work Orders
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Work Order marked as FULL_SUPPLY
+
+  /notifications:
+    get:
+      summary: List notifications for current user
+      tags:
+        - Notifications
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of notifications
+
+  /notifications/{id}/read:
+    patch:
+      summary: Mark notification as read
+      tags:
+        - Notifications
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Notification marked as read
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - nrp
+        - password
+      properties:
+        nrp:
+          type: string
+          example: 'MK1122'
+        password:
+          type: string
+          example: 'secretpassword'
+
+    LoginResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+        nrp:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+          enum: [ADMIN, PLANNER, GL, MEKANIK]
+        site:
+          type: string
+        section:
+          type: string
+          enum: [WHEEL, TRACK, SUPPORT]
+        isActive:
+          type: boolean
+
+    CreateUserRequest:
+      type: object
+      required:
+        - nrp
+        - name
+        - password
+        - role
+        - site
+        - section
+      properties:
+        nrp:
+          type: string
+        name:
+          type: string
+        password:
+          type: string
+          minimum: 6
+        role:
+          type: string
+          enum: [ADMIN, PLANNER, GL, MEKANIK]
+        site:
+          type: string
+        section:
+          type: string
+          enum: [WHEEL, TRACK, SUPPORT]
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        password:
+          type: string
+        role:
+          type: string
+          enum: [ADMIN, PLANNER, GL, MEKANIK]
+        site:
+          type: string
+        section:
+          type: string
+          enum: [WHEEL, TRACK, SUPPORT]
+        isActive:
+          type: boolean
+
+    CreateUnitRequest:
+      type: object
+      required:
+        - unitCode
+        - unitModel
+        - site
+        - section
+      properties:
+        unitCode:
+          type: string
+          example: 'DZ85-21'
+        unitModel:
+          type: string
+          example: 'D85ESS'
+        site:
+          type: string
+          example: 'TAA'
+        section:
+          type: string
+          example: 'TRACK'
+
+    CreateBacklogRequest:
+      type: object
+      required:
+        - backlogNo
+        - unitId
+        - hourmeter
+        - objectDown
+        - priority
+        - damageType
+        - description
+      properties:
+        backlogNo:
+          type: string
+          example: 'BL-2026-9999'
+        unitId:
+          type: string
+          description: 24-character hexadecimal Unit ID
+          example: '6667f1f77bcf86cd79943004'
+        hourmeter:
+          type: integer
+          example: 15400
+        objectDown:
+          type: string
+          enum: [SCHEDULE INSPECTION, SERVICE, BREAKDOWN]
+        priority:
+          type: string
+          enum: [P1, P2, P3, P4]
+        damageType:
+          type: string
+          example: 'Track Link Crack'
+        description:
+          type: string
+          example: 'Track link assembly worn out and cracked'
+
+    AddPartRequest:
+      type: object
+      required:
+        - partNumber
+        - partName
+        - qty
+      properties:
+        partNumber:
+          type: string
+          example: '123-456-789'
+        partName:
+          type: string
+          example: 'Track Link Bolt'
+        qty:
+          type: integer
+          minimum: 1
+          example: 10
+
+    AddPhotoRequest:
+      type: object
+      required:
+        - photoType
+        - photoUrl
+      properties:
+        photoType:
+          type: string
+          enum: [BEFORE, AFTER]
+          example: 'BEFORE'
+        photoUrl:
+          type: string
+          example: 'https://storage.bms.internal/photos/bl-9999-before.jpg'
+
+    CompleteBacklogRequest:
+      type: object
+      required:
+        - completionHourmeter
+        - manpower
+        - remarks
+      properties:
+        completionHourmeter:
+          type: integer
+          example: 15410
+        manpower:
+          type: string
+          example: 'Mekanik Udin, Mekanik Slamet'
+        remarks:
+          type: string
+          example: 'Track link replaced and bolted correctly.'
+
+    CreateWorkOrderRequest:
+      type: object
+      required:
+        - backlogId
+        - woNumber
+        - targetDate
+        - installationPlan
+        - estimatedFullSupply
+      properties:
+        backlogId:
+          type: string
+          example: '6667f1f77bcf86cd79943005'
+        woNumber:
+          type: string
+          example: 'WO-2026-8888'
+        targetDate:
+          type: string
+          format: date-time
+        installationPlan:
+          type: string
+          example: 'Replace track link on site next Saturday'
+        estimatedFullSupply:
+          type: string
+          format: date-time
