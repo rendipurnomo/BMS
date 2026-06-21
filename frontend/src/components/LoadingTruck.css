@@ -1,0 +1,103 @@
+.loading-truck-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 100%;
+  max-width: 300px;
+  min-height: 200px;
+  overflow: hidden;
+  margin: 0 auto;
+}
+
+.truck-image {
+  width: 80%;
+  max-width: 200px;
+  height: auto;
+  object-fit: contain;
+  animation: truck-bounce 0.4s infinite alternate ease-in-out;
+  z-index: 2;
+}
+
+@keyframes truck-bounce {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  100% {
+    transform: translateY(-4px) rotate(0.5deg);
+  }
+}
+
+.road {
+  width: 150%;
+  height: 8px;
+  background: repeating-linear-gradient(
+    90deg,
+    #555 0,
+    #555 20px,
+    transparent 20px,
+    transparent 40px
+  );
+  position: absolute;
+  bottom: 30px;
+  animation: road-move 0.6s infinite linear;
+  z-index: 1;
+}
+
+@keyframes road-move {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: -40px 0;
+  }
+}
+
+.dust {
+  position: absolute;
+  bottom: 40px;
+  left: 30px;
+  width: 15px;
+  height: 15px;
+  background-color: rgba(200, 200, 200, 0.7);
+  border-radius: 50%;
+  z-index: 1;
+  animation: dust-fly 0.8s infinite linear;
+}
+
+.dust:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.dust:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.dust:nth-child(4) {
+  animation-delay: 0.6s;
+}
+
+@keyframes dust-fly {
+  0% {
+    transform: translate(0, 0) scale(0.5);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(-40px, -20px) scale(2);
+    opacity: 0;
+  }
+}
+
+.loading-text {
+  margin-top: 15px;
+  font-family: sans-serif;
+  font-weight: bold;
+  color: #333;
+  animation: pulse 1s infinite alternate;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
