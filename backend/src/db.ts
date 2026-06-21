@@ -1,5 +1,6 @@
 import { Sequelize } from 'sequelize';
 import crypto from 'crypto';
+import pg from 'pg'; // Statically import pg so Vercel bundler includes it in the serverless function
 
 const DB_HOST = process.env.DB_HOST || 'localhost';
 const DB_PORT = parseInt(process.env.DB_PORT || '5432', 10);
@@ -11,6 +12,7 @@ export const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASSWORD, {
   host: DB_HOST,
   port: DB_PORT,
   dialect: 'postgres',
+  dialectModule: pg, // Explicitly pass the pg module to Sequelize
   logging: false, // Set to console.log to debug queries if needed
   dialectOptions: {
     ssl: (DB_HOST.includes('supabase.com') || DB_HOST.includes('neon.tech')) ? {
